@@ -64,7 +64,8 @@ class CutImage():
         draw.line([botRight,botLeft], fill=lColor ,width=lWidth )
         draw.line([botLeft,topLeft], fill=lColor  ,width=lWidth )
         xCount = 0
-        lastrip = 0
+        lastrip = -1
+        allSameRip = True
 
         for i in range(0,inCount):
             inputStr = boards[i]
@@ -99,6 +100,9 @@ class CutImage():
             print topRight
             print botLeft
             print "xCount: ", xCount
+            if lastrip != -1:
+                if y != lastrip[0][1]:
+                    allSameRip = False
             lastrip = [(x,y),(image1.size[0],y)]
             leftText= (xCount + board.cut/2) * scale
             farLeft = xCount *scale
@@ -122,6 +126,8 @@ class CutImage():
             draw.text((leftText-w/2,y/2-h/2), text, font=f, fill=fontColor)
             xCount += board.cut
 
-        draw.line(lastrip, fill=lColor, width=lWidth)
+        if allSameRip:
+            if len(boards) > 1:
+                draw.line(lastrip, fill=lColor, width=lWidth)
         self.image=image1
 
