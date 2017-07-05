@@ -12,13 +12,28 @@ cutsframe = tk.Frame(top)
 imageitemsframe = tk.Frame(top)
 propertyframe = tk.Frame(top)
 top.minsize(width=666, height=666)
+
+scale = 5
 textlines = []
 textframes = []
+imageitemframes = []
 names = []
 dir_name = os.getcwd()
 dirtextprop = StringVar()
 dirtextprop.set("Path: " + dir_name)
+
+subdirstring = StringVar()
+subdirlabel = tk.Label(propertyframe,text="Subdirectory:")
+subdirentry = tk.Entry(propertyframe,textvariable=subdirstring)
+
+
 dirlabel = tk.Label(propertyframe, textvariable=dirtextprop,text=dirtextprop)
+
+scaletextvar = StringVar()
+scaleframe = tk.Frame(top)
+scalelabel = tk.Label(scaleframe, text="Scale:")
+scalentry = tk.Entry(scaleframe, textvariable=scaletextvar)
+scaletextvar.set(str(scale))
 
 def browsedirectory():
     global dir_name
@@ -28,6 +43,8 @@ def browsedirectory():
     dirtextprop.set("Path: " + dir_name)
 def addtextbox():
     global textframes
+    global textlines
+
     f = Frame(cutsframe)
     nameLabel = Label(f,text="Name:")
     nameText=  Text(f, height=1,width=20)
@@ -44,20 +61,28 @@ def addtextbox():
     textframes.append(f)
 
 def createimageitem(img,name):
+    global imageitemframes
     size = 200,200
     #bard = Image.open("test.bmp")
     img.thumbnail(size, Image.ANTIALIAS)
     bardejov = ImageTk.PhotoImage(img)
     f = ImageItemView.addimageitem(imageitemsframe,name, bardejov)
     f.pack()
+    imageitemframes.append(f)
 
 
 def process():
+    global scaletextvar
+    global subdirentry
+    subdir = subdirentry.get()
     for i in range(0,len(textlines)):
         t = textlines[i].get("1.0",'end-1c')
         n = names[i].get("1.0",'end-1c')
-        ci = CutImage.CutImage(t)
-        path = os.path.join(dir_name, n + "." + "bmp")
+        ci = CutImage.CutImage(t,int(scaletextvar.get()))
+        path = os.path.join(dir_name, subdir + os.sep + n + "." + "bmp")
+        if not os.path.exists(path):
+            os.makedirs(path)
+            os.chmod(path, 0777)
         ci.image.save(path)
         i = ci.image
         createimageitem(i,n)
@@ -69,16 +94,37 @@ def deletelastline():
         frm.pack_forget()
         frm.destroy()
         del textframes[-1]
-
+def clearitems():
+    clearlist(imageitemframes)
+    clearlist(textframes)
+    del imageitemframes[:]
+    del textframes[:]
+    del textlines[:]
+    del names[:]
+    addtextbox()
+def clearlist(list):
+    for frm in list:
+        frm.pack_forget()
+        frm.destroy()
 
 # Code to add widgets will go here...
 addcutline = tk.Button(buttonsframe, text="Add line", command = addtextbox)
 processButton = tk.Button(buttonsframe,text="Process",command=process)
 browsedirbutton = tk.Button(buttonsframe, text="Open Folder...", command=browsedirectory)
-deletelastlinebutton =  tk.Button(buttonsframe,text="Delete line",command=deletelastline)
+deletelastlinebutton = tk.Button(buttonsframe,text="Delete line",command=deletelastline)
+clearitemsbutton = tk.Button(buttonsframe,text="Clear All",command=clearitems)
 
-dirlabel.pack(side=LEFT)
-propertyframe.pack(side=TOP, fill=X)
+
+subdirentry.pack(side=RIGHT,anchor=E)
+subdirlabel.pack(side=RIGHT,anchor=E)
+
+dirlabel.pack(side=LEFT,anchor=W)
+propertyframe.pack(fill=BOTH, pady=(5, 15))
+
+scaleframe.pack(anchor=W)
+scalelabel.pack(side=LEFT)
+scalentry.pack(side=LEFT)
+
 
 browsedirbutton.pack(side=LEFT)
 
@@ -92,5 +138,6 @@ addtextbox()
 processButton.pack(side=RIGHT)
 addcutline.pack(side=RIGHT)
 
+clearitemsbutton.pack(side=RIGHT)
 buttonsframe.pack(fill=BOTH, side=BOTTOM)
 top.mainloop()

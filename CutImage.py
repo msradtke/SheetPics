@@ -13,14 +13,14 @@ class Board:
 
 class CutImage():
     image = Image
-    scale = 5
     def ParseSizes(self,psizes,scale):
         sizestring = psizes
-        self.scale = scale
+
         return psizes.split(",")
 
-    def __init__(self,sizes=[]):
+    def __init__(self,sizes=[],scale=5):
         self.sizes = sizes
+        self.scale = scale
         self.process()
 
     def getfraction(self,dec):
@@ -44,8 +44,8 @@ class CutImage():
         boards= self.sizes.split(",")
         inCount = len(boards)
         lWidth = 1
-        width = 96*scale
-        height = 48*scale
+        width = 96*self.scale
+        height = 48*self.scale
         white = (255, 255, 255)
         bg = (128,255,255)
         lColor = (0, 0, 0)
@@ -95,9 +95,9 @@ class CutImage():
             board = Board(float(split[0]),float(split[1]))
             print "rip " , board.rip
             print "cut " , board.cut
-            x = (xCount + board.cut) * scale
-            y = board.rip * scale
-            leftRip = xCount *scale
+            x = (xCount + board.cut) * self.scale
+            y = board.rip * self.scale
+            leftRip = xCount *self.scale
             print "x: ",x, "y: ",y
             print topRight
             print botLeft
@@ -106,8 +106,8 @@ class CutImage():
                 if y != lastrip[0][1]:
                     allSameRip = False
             lastrip = [(x,y),(image1.size[0],y)]
-            leftText= (xCount + board.cut/2) * scale
-            farLeft = xCount *scale
+            leftText= (xCount + board.cut/2) * self.scale
+            farLeft = xCount *self.scale
 
             draw.line([(farLeft,0),(farLeft,y)], fill=lColor,width=lWidth ) #leftcutline
             draw.line([(x,0),(x,y)], fill=lColor,width=lWidth ) #cutline
