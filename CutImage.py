@@ -13,9 +13,10 @@ class Board:
 
 class CutImage():
     image = Image
-
-    def ParseSizes(self,psizes):
+    scale = 5
+    def ParseSizes(self,psizes,scale):
         sizestring = psizes
+        self.scale = scale
         return psizes.split(",")
 
     def __init__(self,sizes=[]):
@@ -33,6 +34,8 @@ class CutImage():
             return "1/2"
         if dec == "75":
             return "3/4"
+        if dec == "875":
+            return "7/8"
 
     def getfont(self,fSize):
         return ImageFont.truetype("%WINDIR%\Fonts\consola.ttf", fSize)
@@ -40,7 +43,6 @@ class CutImage():
     def process(self):
         boards= self.sizes.split(",")
         inCount = len(boards)
-        scale = 5
         lWidth = 1
         width = 96*scale
         height = 48*scale
@@ -118,9 +120,13 @@ class CutImage():
             w,h = 0,0
             while fontSizeFits == False:
                 f = self.getfont(curFontSize)
-                w,h = draw.textsize(text ,font=f)
-                if(w + 2* margin < x-farLeft):
+
+                w,h = draw.textsize(text, font=f)
+                if curFontSize <= 1:
                     fontSizeFits = True
+                else:
+                    if (w + 2 * margin) < x-farLeft:
+                        fontSizeFits = True
                 curFontSize -= 1
 
             draw.text((leftText-w/2,y/2-h/2), text, font=f, fill=fontColor)
@@ -130,4 +136,5 @@ class CutImage():
             if len(boards) > 1:
                 draw.line(lastrip, fill=lColor, width=lWidth)
         self.image=image1
+
 
