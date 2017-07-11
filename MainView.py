@@ -5,11 +5,12 @@ from PIL import ImageTk, Image
 import ImageItemView
 import CutImage
 import os
+from stat import S_IREAD, S_IRGRP, S_IROTH,S_IWUSR,S_IWRITE
 
 top = tk.Tk()
 buttonsframe = tk.Frame(top)
 cutsframe = tk.Frame(top)
-imageitemsframe = tk.Frame(top)
+canvasimageitemframe = tk.Frame(top)
 propertyframe = tk.Frame(top)
 top.minsize(width=666, height=666)
 
@@ -34,6 +35,30 @@ scaleframe = tk.Frame(top)
 scalelabel = tk.Label(scaleframe, text="Scale:")
 scalentry = tk.Entry(scaleframe, textvariable=scaletextvar)
 scaletextvar.set(str(scale))
+
+
+def on_configure(event):
+    # update scrollregion after starting 'mainloop'
+    # when all widgets are in canvas
+    canvas.configure(scrollregion=canvas.bbox('all'))
+
+# --- create canvas with scrollbar ---
+canvas = tk.Canvas(canvasimageitemframe)
+canvas.pack(side=tk.RIGHT,fill=BOTH,expand=TRUE)
+
+imageitemsframe = tk.Frame(canvas)
+scrollbar = tk.Scrollbar(canvas, command=canvas.yview)
+scrollbar.pack(side=tk.RIGHT, fill=Y)
+
+canvas.configure(yscrollcommand=scrollbar.set)
+
+# update scrollregion after starting 'mainloop'
+# when all widgets are in canvas
+imageitemsframe.bind("<Configure>", lambda event, canvas=canvas: on_configure(canvas))
+# --- put frame in canvas ---
+
+
+canvas.create_window((4,4), window=imageitemsframe, anchor='nw')
 
 def browsedirectory():
     global dir_name
@@ -79,11 +104,16 @@ def process():
         t = textlines[i].get("1.0",'end-1c')
         n = names[i].get("1.0",'end-1c')
         ci = CutImage.CutImage(t,int(scaletextvar.get()))
-        path = os.path.join(dir_name, subdir + os.sep + n + "." + "bmp")
+
+        path = dir_name
+        filepath = os.path.join(dir_name, n + "." + "bmp")
+        if not subdir == "":
+            path = os.path.join(dir_name, subdir)
+            filepath = os.path.join(dir_name, subdir + os.sep + n + "." + "bmp")
         if not os.path.exists(path):
             os.makedirs(path)
-            os.chmod(path, 0777)
-        ci.image.save(path)
+            #os.chmod(path, S_IWUSR | S_IWRITE)
+        ci.image.save(filepath)
         i = ci.image
         createimageitem(i,n)
 
@@ -94,6 +124,10 @@ def deletelastline():
         frm.pack_forget()
         frm.destroy()
         del textframes[-1]
+        del textlines[-1]
+        del names[-1]
+
+
 def clearitems():
     clearlist(imageitemframes)
     clearlist(textframes)
@@ -102,24 +136,32 @@ def clearitems():
     del textlines[:]
     del names[:]
     addtextbox()
+
+
 def clearlist(list):
     for frm in list:
         frm.pack_forget()
         frm.destroy()
 
+
+def opendirectory():
+    global dir_name
+    os.startfile(dir_name)
+
 # Code to add widgets will go here...
 addcutline = tk.Button(buttonsframe, text="Add line", command = addtextbox)
 processButton = tk.Button(buttonsframe,text="Process",command=process)
-browsedirbutton = tk.Button(buttonsframe, text="Open Folder...", command=browsedirectory)
+browsedirbutton = tk.Button(buttonsframe, text="Set Folder...", command=browsedirectory)
 deletelastlinebutton = tk.Button(buttonsframe,text="Delete line",command=deletelastline)
 clearitemsbutton = tk.Button(buttonsframe,text="Clear All",command=clearitems)
-
+opendirbutton = tk.Button(buttonsframe, text="Open...", command=opendirectory)
 
 subdirentry.pack(side=RIGHT,anchor=E)
 subdirlabel.pack(side=RIGHT,anchor=E)
 
 dirlabel.pack(side=LEFT,anchor=W)
 propertyframe.pack(fill=BOTH, pady=(5, 15))
+opendirbutton.pack(side=LEFT)
 
 scaleframe.pack(anchor=W)
 scalelabel.pack(side=LEFT)
@@ -133,7 +175,8 @@ addcutline.pack(side=RIGHT)
 deletelastlinebutton.pack(side=RIGHT)
 
 #createimageitem()
-imageitemsframe.pack(fill=X)
+#imageitemsframe.pack(fill=BOTH)
+canvasimageitemframe.pack(fill=BOTH,expand=1)
 addtextbox()
 processButton.pack(side=RIGHT)
 addcutline.pack(side=RIGHT)
